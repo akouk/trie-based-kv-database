@@ -14,7 +14,7 @@ The data generation program is used to generate random data in the form of key-v
 
 ### Usage
 To use the program, run the following command line
-'''python3 dataCration.py -k keyFile.txt -n 1000 -d 3 -l 4 -m 5'''
+'python3 dataCration.py -k keyFile.txt -n 1000 -d 3 -l 4 -m 5'
 
 ### Data Format
 The generated data is in the form of key-value pairs, where the value can contain additional key-value pairs nested to a certain depth. The values can be integers, floats, strings, or sets of key-value pairs. The top-level keys can be either random strings or keys in the form "key1", "key2", etc.
