@@ -84,10 +84,11 @@ class Trie:
         high_level_key = keys[0]
         value_of_high_level_key = self.get(high_level_key)
 
-        def search_dictionary(dic, keys):
-            if len(keys) == 0:
-                return dic
-            key = keys.pop(0)
+
+        def search_dictionary( dic, keys):
+            # if len(keys) == 0:
+            #     return dic
+            # key = keys.pop(0)
             if type(dic) == dict:
                 for key in keys[1:]:
                     print(f"key: {key}")
@@ -99,10 +100,17 @@ class Trie:
                         print(f"The key: {key} not found in the keypath! Please provide a valid keypath.")
                         return None
             # return None
-        # follow the path of the keys in the trie
+            # follow the path of the keys in the trie
 
-        keypath_value = search_dictionary(value_of_high_level_key, keys)
+        if value_of_high_level_key == None:
+            print(f"{high_level_key} -> []")
+            keypath_value == None
+        else:
+            keypath_value = search_dictionary(value_of_high_level_key, keys)
+            
         return keypath_value
+
+ 
 
 def main():
     data = {"ageqRfZ": 
