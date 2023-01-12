@@ -74,8 +74,8 @@ class Trie:
     def query(self, keypath):
         # split the keypath into individual keys
         keys = keypath.split(".")
-        print(keys)
-        print(keys[0])
+        # print(keys)
+        # print(keys[0])
 
         # start at the root of the trie
         current_root = self.root
@@ -83,9 +83,11 @@ class Trie:
         
         high_level_key = keys[0]
         value_of_high_level_key = self.get(high_level_key)
+        print(f"1st_value_of_highlkey: {value_of_high_level_key}")
 
 
         def search_dictionary( dic, keys):
+            print(keys)
             # if len(keys) == 0:
             #     return dic
             # key = keys.pop(0)
@@ -95,18 +97,18 @@ class Trie:
                     if key in dic:
                         print(f"key: {key} found!")
                         print(f"value of key: {key} is {dic[key]}")
-                        return search_dictionary(dic[key], keys)
+                        return search_dictionary(dic[key], keys[1:])
                     else:
                         print(f"The key: {key} not found in the keypath! Please provide a valid keypath.")
                         return None
-            # return None
-            # follow the path of the keys in the trie
+
 
         if value_of_high_level_key == None:
             print(f"{high_level_key} -> []")
             keypath_value == None
         else:
             keypath_value = search_dictionary(value_of_high_level_key, keys)
+            print(f"keypath_value: {keypath_value}")
             
         return keypath_value
 
@@ -146,7 +148,7 @@ def main():
     trie = Trie()
     for key, value in data.items():
         trie.put(key, value)
-    print(trie.query('ageqRfZ.level.person2.age'))
+    print(trie.query('ageqRfZ.level.person2.person1'))
 
     # trie.add_to_trie(trie, "", data)
     # print(trie.query('ageqRfZ.level.person2.age'))
