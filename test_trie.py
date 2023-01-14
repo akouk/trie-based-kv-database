@@ -1,3 +1,7 @@
+import re
+import numbers
+import math
+
 class TrieNode:
     def __init__(self):
         self.children = {} # a dictionary mapping characters to child nodes
@@ -13,6 +17,9 @@ class TrieNode:
 class Trie:
     def __init__(self):
         self.root = TrieNode() # create the root node of the trie
+        self.variables = {} # dictionary to store variable names and their values
+        self.operators = {'+':1, '-':1, '*':2, '/':2, '^':3} # dictionary to store operator precedence
+        self.functions = {'sin': math.sin, 'cos': math.cos, 'tan': math.tan, 'log': math.log} # dictionary to store trigonometric and logarithmic functions
 
     def put(self, key, value):
         current_root = self.root # start at the root of the trie
@@ -74,43 +81,115 @@ class Trie:
     def query(self, keypath):
         # split the keypath into individual keys
         keys = keypath.split(".")
-        # print(keys)
-        # print(keys[0])
 
-        # start at the root of the trie
-        current_root = self.root
-        # current_value = current_root.value
-        
         high_level_key = keys[0]
         value_of_high_level_key = self.get(high_level_key)
-        print(f"1st_value_of_highlkey: {value_of_high_level_key}")
 
-
+        keypath_value = None
         def search_dictionary( dic, keys):
-            print(keys)
-            # if len(keys) == 0:
-            #     return dic
-            # key = keys.pop(0)
-            if type(dic) == dict:
-                for key in keys[1:]:
-                    print(f"key: {key}")
-                    if key in dic:
-                        print(f"key: {key} found!")
-                        print(f"value of key: {key} is {dic[key]}")
-                        return search_dictionary(dic[key], keys[1:])
-                    else:
-                        print(f"The key: {key} not found in the keypath! Please provide a valid keypath.")
-                        return None
+            for key in keys[1:]:
+                # print(f"key: {key}")
+                if key in dic:
+                    dic = dic[key]
+                else:
+                    return None
+
+            if isinstance(dic, dict):
+                search_dictionary(dic, keys)
+            
+            return dic
 
 
         if value_of_high_level_key == None:
             print(f"{high_level_key} -> []")
-            keypath_value == None
+            # keypath_value == None
         else:
-            keypath_value = search_dictionary(value_of_high_level_key, keys)
-            print(f"keypath_value: {keypath_value}")
+            if isinstance(value_of_high_level_key, dict):
+                keypath_value = search_dictionary(value_of_high_level_key, keys)
+                # print(f"keypath_value: {keypath_value}")
+                # print(f"{keypath} -> " + print_key_value(keypath_value))
             
         return keypath_value
+
+    def compute(self, formula_with_keypath):
+
+
+        match_simple_formula = re.search(r"COMPUTE (.*) WHERE (\w+) = QUERY (.*)", formula_with_keypath)
+        if match_simple_formula:
+            computation = match_simple_formula.group(1)
+            variable_name = match_simple_formula.group(2)
+            keypath = match_simple_formula.group(3)
+            variable_value = self.query(keypath)
+
+            def perform_operation(operand1, operand2, operator):
+                if operator == "+":
+                    return operand1 + operand2
+                elif operator == "-":
+                    return operand1 - operand2
+                elif operator == "*":
+                    return operand1 * operand2
+                elif operator == "/":
+                    return operand1 / operand2
+                elif operator == "^":
+                    return operand1 ** operand2
+
+            if isinstance(variable_value, numbers.Number):
+                computation = computation.replace(variable_name, str(variable_value))
+                operators_and_variables = re.findall("\d+|[+\-*/^()]", computation)
+                print(f"operators_and_variables: {operators_and_variables}")
+                # Perform the computation using the list of numbers and mathematical operators
+                # ...
+                operand1 = int(operators_and_variables[0])
+                operand2 = int(operators_and_variables[2])
+                operator = operators_and_variables[1]
+                result = perform_operation(operand1, operand2, operator)
+            else:
+                return "Variable is not a number"
+        else:
+            return "Invalid formula"
+
+
+        # # Extract the formula and keypath
+        # formula, keypath = formula_with_keypath.split("WHERE")
+        # print(f"formula:{formula}, keypath:{keypath}")
+        # # Extract the variable name
+        # variable_name = keypath.split("=")[0].strip()
+        # print(f"variable_name: {variable_name}")
+        # # Get the value of the keypath
+        # variable_value = self.query(keypath.split("QUERY")[1].strip())
+        # print(f"variable_value: {variable_value}")
+
+        # def perform_operation(operand1, operand2, operator):
+        #     if operator == "+":
+        #         return operand1 + operand2
+        #     elif operator == "-":
+        #         return operand1 - operand2
+        #     elif operator == "*":
+        #         return operand1 * operand2
+        #     elif operator == "/":
+        #         return operand1 / operand2
+        #     elif operator == "^":
+        #         return operand1 ** operand2
+
+        # if variable_value != None:
+        # # Replace the variable name with its value in the formula
+        #     formula = formula.replace(variable_name, str(variable_value))
+        #     print(f"formula: {formula}")
+        #     # Use regular expression to find all the numbers and mathematical operators in the formula
+        #     operators_and_variables = re.findall("\d+|[+\-*/^()]", formula)
+        #     print(f"operators_and_variables: {operators_and_variables}")
+        #     # Perform the computation using the list of numbers and mathematical operators
+        #     # ...
+        #     operand1 = int(operators_and_variables[0])
+        #     operand2 = int(operators_and_variables[2])
+        #     operator = operators_and_variables[1]
+        #     result = perform_operation(operand1, operand2, operator)
+        # else: 
+        #     return "Invalid keypath"
+        # Compute the formula
+        # result = evaluate_formula(formula)
+        # result = eval(operators_and_variables[0] + operators_and_variables[1] + operators_and_variables[2])
+        return result
 
  
 
