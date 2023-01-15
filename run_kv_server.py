@@ -4,7 +4,7 @@ import socket
 import argparse
 import threading
 import typing as tp
-from NEW.KVServer import KVServer
+from KVServer import KVServer
 
 class Message(str, enum.Enum):
     ping = 'PING'
@@ -22,7 +22,6 @@ class Server(KVServer):
 
     def handle_client(self, conn: socket.socket, addr: tp.Tuple[tp.Any, ...]):
         print(f'New connection {addr} connected')
-        person = {}
         connected = True
 
         while connected:
@@ -38,34 +37,56 @@ class Server(KVServer):
             if msg == Message.ping:
                 conn.send('PONG'.encode(self.format))
 
-            if msg.lower().startswith('put'):
+            
+            if msg.lower().startswith('PUT'):
+                _, data_str = msg.split(' ', 1)
                 try:
-                    _, data = msg.split(' ', 1)
-                    dict_data = json.loads(data)
-                    for key, value in dict_data.items():
-                        person[key] = value
+                    data_to_put = json.loads(data_str) # Load the data from the string
+                    for key, value in data_to_put.items():
+                        Server.put_request(key, value)
+                    conn.send('OK'.encode(self.format))
                 except json.JSONDecodeError:
                     conn.send('ERROR'.encode(self.format))
 
-                conn.send('OK'.encode(self.format))
+                
 
-            elif msg.lower().startswith('get'):
+            elif msg.lower().startswith('GET'):
                 _, key = msg.split(' ')
-                results = person.get(key)
+                get_result = Server.get_request(key)
 
-                if results is None:
+                if get_result is None:
+                    conn.send('NOT FOUND'.encode())
+
+                conn.send(json.dumps(get_result).encode(self.format))
+
+            elif msg.lower().startswith('DELETE'):
+                _, key = msg.split(' ')
+                delete_request = Server.delete_request(key)
+
+                if delete_request:
+                    conn.send('OK'.encode(self.format))
+                
+                else:
+                    conn.send('ERROR'.encode())
+                
+
+            elif msg.lower().startswith('QUERY'):
+                _, keypath = msg.split(' ')
+                query_result = Server.query_request(keypath)
+
+                if query_result is None:
+                    conn.send('NOT FOUND'.encode())
+                
+                conn.send(json.dumps(query_result).encode(self.format))
+
+            elif msg.lower().startswith('COMPUTE'):
+                compute_result = Server.compute_request(msg)
+
+                if compute_result is None:
                     conn.send('Not found'.encode())
+                
+                conn.send(json.dumps(compute_result).encode(self.format))
 
-                conn.send(json.dumps(results).encode(self.format))
-
-            elif msg.lower().startswith('delete'):
-                print(data)
-
-            elif msg.lower().startswith('query'):
-                print(data)
-
-            elif msg.lower().startswith('compute'):
-                print(data)
 
     def start(self):
         self.server_socket.listen()
@@ -81,20 +102,20 @@ class Server(KVServer):
                     thread.join()
                     break
         except KeyboardInterrupt:
-            print("Close the server")
+            print('Close the server')
 
 
 def run_server_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-p",
-        help="Socket port",
+        '-p',
+        help='Socket port',
         type=int_type,
         required=True
     )
     parser.add_argument(
-        "-a",
-        help="Socket IP",
+        '-a',
+        help='Socket IP',
         type=str,
         required=True
     )
@@ -116,5 +137,10 @@ def main():
     server.port
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
+
+    ## python3 run_server.py -p 5000 -a localhost
+    ## python3 run_server.py -p 4000 -a localhost
+    ## python3 run_server.py -p 7000 -a localhost
+    ## python3 run_server.py -p 9000 -a localhost
