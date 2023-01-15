@@ -1,5 +1,5 @@
 import json
-import NEW.BaseServer as BaseServer
+import BaseServer as BaseServer
 import socket
 import random
 import asyncio
@@ -39,9 +39,8 @@ class Client:
             'Enter command (GET, DELETE, QUERY, COMPUTE or EXIT): '
         )
 
-        while not command.lower().startswith('exit'):
-            if command.lower().startswith('get'):
-                # GET HERE
+        while not command.lower().startswith('EXIT'):
+            if command.lower().startswith('GET'):
                 await asyncio.gather(
                     *[
                         self.communication(server, command)
@@ -49,24 +48,36 @@ class Client:
                     ]
                 )
 
-            elif command.lower().startswith('delete'):
-                # DELETE HERE
-                ...
+            elif command.lower().startswith('DELETE'):
+                await asyncio.gather(
+                    *[
+                        self.communication(server, command)
+                        for server in self.connections
+                    ]
+                )
 
-            elif command.lower().startswith('query'):
-                # QUERY HERE
-                ...
+            elif command.lower().startswith('QUERY'):
+                await asyncio.gather(
+                    *[
+                        self.communication(server, command)
+                        for server in self.connections
+                    ]
+                )
 
             elif command.lower().startswith('COMPUTE'):
-                # GET COMPUTE
-                ...
+                await asyncio.gather(
+                    *[
+                        self.communication(server, command)
+                        for server in self.connections
+                    ]
+                )
 
             elif command.lower().startswith('exit'):
                 break
 
             else:
                 print(
-                    'Your command must be one of the (GET, DELETE, QUERY, COMPUTE or EXIT)'
+                    'Your command must be one of the following: GET, DELETE, QUERY, COMPUTE or EXIT'
                 )
             command = input(
                 'Enter command (GET, DELETE, QUERY, COMPUTE or EXIT): '
@@ -104,42 +115,41 @@ class Client:
         for server in self._servers_with_data:
             for data in self.data:
                 msg = 'PUT ' + json.dumps(data)
-                print(msg)
-                server.send(msg.encode("utf-8"))
+                # print(msg)
+                server.send(msg.encode('utf-8'))
                 response = server.recv(5000).decode('utf-8')
 
-                if response.lower() != 'ok':
+                if response.lower() != 'OK':
                     raise OSError('Failed to send the data')
 
 def run_client_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s",
-        help="Server file",
+        '-s',
+        help='Server file',
         type=txt_file,
         required=True
     )
     parser.add_argument(
-        "-i",
-        help="data to index",
+        '-i',
+        help='data to index',
         type=txt_file,
         required=True
     )
     parser.add_argument(
-        "-k",
-        help="replication factor",
-        type=str,
+        '-k',
+        help='replication factor',
+        type=int_type,
         required=True
     )
     args = parser.parse_args()
     return args
 
 def txt_file(arg):
-
     if not os.path.isfile(arg):
-        raise argparse.ArgumentTypeError(f"Error: {arg} does not exist. Please provide an existing file!")
-    elif not os.path.splitext(arg)[1] == ".txt":
-        raise argparse.ArgumentTypeError(f"Error: {arg} is not a text file. Please provide a txt file as argument!")
+        raise argparse.ArgumentTypeError(f'Error: {arg} does not exist. Please provide an existing file!')
+    elif not os.path.splitext(arg)[1] == '.txt':
+        raise argparse.ArgumentTypeError(f'Error: {arg} is not a text file. Please provide a txt file as argument!')
     return arg
 
 def int_type(arg):
@@ -157,4 +167,5 @@ def main():
 if __name__ == '__main__':
     main()
     
-    
+
+# python3 run_client.py -s serverFile.txt -i outputFile.txt -k 2
