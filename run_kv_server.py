@@ -1,4 +1,3 @@
-import enum
 import json
 import socket
 import argparse
@@ -6,103 +5,162 @@ import threading
 import typing as tp
 from KVServer import KVServer
 
-class Message(str, enum.Enum):
-    ping = 'PING'
-    exit = 'EXIT'
 
-
-class Server(KVServer):
+class Server:
     def __init__(self, port: int, host: str) -> None:
-        super().__init__(port, host)
+        self.host = host
+        self.port = port
         self.format = 'utf-8'
-        self.head = 1024
+        self.head = 10000
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(1)
+        self.threads: tp.List[threading.Thread] = []
 
-    def handle_client(self, conn: socket.socket, addr: tp.Tuple[tp.Any, ...]):
-        print(f'New connection {addr} connected')
+    def handle_client(self, conn: socket.socket, addr: tp.Tuple[tp.Any, ...], running):
+        print(f'[Server Thread]: New connection {addr} connected')
         connected = True
-
-        while connected:
+        kv_server = KVServer()
+        while connected and running:
             msg = conn.recv(self.head).decode(self.format)
 
             if not msg:
                 continue
 
-            if msg == Message.exit:
+            if msg.lower().startswith('exit'):
                 connected = False
+                conn.send('OK'.encode(self.format))
                 continue
 
-            if msg == Message.ping:
+            if msg.lower().startswith('ping'):
                 conn.send('PONG'.encode(self.format))
 
-            
-            if msg.lower().startswith('PUT'):
+            if msg.lower().startswith('put'):
                 _, data_str = msg.split(' ', 1)
                 try:
-                    data_to_put = json.loads(data_str) # Load the data from the string
+                    # Load the data from the string
+                    data_to_put = json.loads(data_str)
                     for key, value in data_to_put.items():
-                        Server.put_request(key, value)
+                        kv_server.put_request(key, value)
                     conn.send('OK'.encode(self.format))
+
                 except json.JSONDecodeError:
                     conn.send('ERROR'.encode(self.format))
 
-                
+                except Exception as error:
+                    # Server error
+                    print("[Server Thread]:", error)
+                    conn.send('ERROR'.encode(self.format))
 
-            elif msg.lower().startswith('GET'):
+            elif msg.lower().startswith('get'):
+                print("[Server Thread]: GET", msg)
+                try:
+                    _, key = msg.split(' ', 1)
+                    get_result = kv_server.get_request(key)
+
+                    if get_result is None:
+                        conn.send('NOT FOUND'.encode(self.format))
+                        continue
+                    
+                    # TODO: Check if "get_request" returns `null` value
+                    if get_result == "null":
+                        conn.send(f'“{key}” -> []'.encode(self.format))
+                        continue
+                    
+                    conn.send(f"“{key}” -> {self.print_data(get_result)}".encode(self.format))
+
+                except (ValueError, TypeError) as error:
+                    print("[Server Thread]: Server-Error:",  error)
+
+            elif msg.lower().startswith('delete'):
                 _, key = msg.split(' ')
-                get_result = Server.get_request(key)
-
-                if get_result is None:
-                    conn.send('NOT FOUND'.encode())
-
-                conn.send(json.dumps(get_result).encode(self.format))
-
-            elif msg.lower().startswith('DELETE'):
-                _, key = msg.split(' ')
-                delete_request = Server.delete_request(key)
-
-                if delete_request:
+                try:
+                    kv_server.delete_request(key)
                     conn.send('OK'.encode(self.format))
-                
-                else:
-                    conn.send('ERROR'.encode())
-                
+                except:
+                    conn.send('ERROR'.encode(self.format))
 
-            elif msg.lower().startswith('QUERY'):
+            elif msg.lower().startswith('query'):
                 _, keypath = msg.split(' ')
-                query_result = Server.query_request(keypath)
+                try:
+                    query_result = kv_server.query_request(keypath)
+
+                except Exception:
+                    conn.send('NOT FOUND'.encode(self.format))
+                    continue
 
                 if query_result is None:
-                    conn.send('NOT FOUND'.encode())
+                    conn.send('NOT FOUND'.encode(self.format))
+                    continue
                 
-                conn.send(json.dumps(query_result).encode(self.format))
+                if isinstance(query_result, str):
+                    conn.send(f'“{key}” -> {query_result}'.encode(self.format))
+                    continue
+                
+                conn.send(f"“{key}” -> {self.print_data(get_result)}".encode(self.format))
 
-            elif msg.lower().startswith('COMPUTE'):
-                compute_result = Server.compute_request(msg)
+            elif msg.lower().startswith('compute'):
+                try:
+                    compute_result = kv_server.compute_request(msg.upper())
+
+                except Exception:
+                    conn.send('NOT FOUND'.encode(self.format))
+                    continue
 
                 if compute_result is None:
                     conn.send('Not found'.encode())
-                
-                conn.send(json.dumps(compute_result).encode(self.format))
+                    continue
+
+                # !ERROR: Check the results of compute
+                conn.send(str(compute_result).encode(self.format))
+
+        print("[Server Thread]: Client disconnect!")
+        conn.close()
+
+    def print_data(self, obj: dict) -> str:
+
+        def handle_value(v):
+            if isinstance(v, dict):
+                return f'[ {self.print_data(v)} ]'
+
+            elif isinstance(v, list):
+                return f'[ {" | ".join(f"“{str(element)}”" for element in v)} ]'
+
+            elif isinstance(v, (int, float)):
+                return str(v)
+
+            elif v is None:
+                return 'null'
+
+            else:
+                return f'“{str(v)}”'
+
+        return f' | '.join([F'“{k}” -> {handle_value(v)}' for k, v in obj.items()])
 
 
     def start(self):
         self.server_socket.listen()
+
         try:
             while True:
                 conn, addr = self.server_socket.accept()
+                running = threading.Event()
+                running.set()
                 thread = threading.Thread(
-                    target=self.handle_client, args=(conn, addr)
+                    target=self.handle_client,
+                    args=(conn, addr, running)
                 )
-                try:
-                    thread.start()
-                except KeyboardInterrupt:
-                    thread.join()
-                    break
+
+                self.threads.append(thread)
+                thread.start()
+
         except KeyboardInterrupt:
-            print('Close the server')
+            print("[Server]: Stopped by Ctrl+C")
+
+        finally:
+            self.server_socket.close()
+            for thread in self.threads:
+                thread.join(timeout=2)
 
 
 def run_server_arguments():
@@ -134,13 +192,7 @@ def main():
     args = run_server_arguments()
     server = Server(args.p, args.a)
     server.start()
-    server.port
 
 
 if __name__ == '__main__':
     main()
-
-    ## python3 run_server.py -p 5000 -a localhost
-    ## python3 run_server.py -p 4000 -a localhost
-    ## python3 run_server.py -p 7000 -a localhost
-    ## python3 run_server.py -p 9000 -a localhost
