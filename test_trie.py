@@ -55,10 +55,6 @@ class Trie:
         else:
             return None
 
-    # def remove_if_unused(self):
-    #     # remove the node if it has no children, is marked as deleted and is a leaf node
-    #     if self.is_deleted and not self.children:
-    #         del self
 
     def delete(self, key:str) -> str:
         current_root = self.root
@@ -76,7 +72,7 @@ class Trie:
         path.append(current_root)
         # remove all nodes that are no longer being used
         for node in path:
-            node.remove_if_unused()
+            node.self.remove_if_unused()
 
     def query(self, keypath: str) -> str:
         # split the keypath into individual keys
@@ -110,167 +106,6 @@ class Trie:
             
         return keypath_value
 
-    # def compute(self, formula_with_keypath: str) -> str:
-
-
-    #     match_simple_formula = re.search(r"COMPUTE (.*) WHERE (\w+) = QUERY (.*)", formula_with_keypath)
-    #     if not match_simple_formula:
-    #         return "Invalid formula"
-
-    #     computation = match_simple_formula.group(1)
-    #     variable_name = match_simple_formula.group(2).strip()
-    #     keypath = match_simple_formula.group(3).strip()
-    #     variable_value = self.query(keypath)
-
-    #     def perform_operation(operand1, operand2, operator):
-    #         if operator == "+":
-    #             return operand1 + operand2
-    #         elif operator == "-":
-    #             return operand1 - operand2
-    #         elif operator == "*":
-    #             return operand1 * operand2
-    #         elif operator == "/":
-    #             return operand1 / operand2
-    #         elif operator == "^":
-    #             return operand1 ** operand2
-
-    #     if isinstance(variable_value, numbers.Number):
-    #         computation = computation.replace(variable_name, str(variable_value))
-    #         operators_and_variables = re.findall("\d+|[+\-*/^()]", computation)
-    #         # Perform the computation using the list of numbers and mathematical operators
-    #         # ...
-    #         operand1 = int(operators_and_variables[0])
-    #         operand2 = int(operators_and_variables[2])
-    #         operator = operators_and_variables[1]
-    #         result = perform_operation(operand1, operand2, operator)
-    #     else:
-    #         return "Variable is not a number"            
-
-    #     return result
-
-    @staticmethod
-    def is_operator(character, operator_precedence):
-        return character in operator_precedence
-
-    @staticmethod
-    def precedence(character, operator_precedence):
-        return operator_precedence[character]
-
-    @staticmethod
-    def is_function(character, function_precedence):
-        return character in function_precedence
-
-    @staticmethod
-    def is_number(character):
-        if character.isnumeric():
-            return True
-
-    @staticmethod
-    def is_left_associative(character, left_associative_operators):
-        return character in left_associative_operators
-        
-    @staticmethod
-    def perform_operation(operand1, operand2, operator):
-        if operator == "+":
-            return operand1 + operand2
-        elif operator == "-":
-            return operand1 - operand2
-        elif operator == "*":
-            return operand1 * operand2
-        elif operator == "/":
-            return operand1 / operand2
-        elif operator == "^":
-            return operand1 ** operand2
-        else:
-            return "Invalid operand!"
-
-    @staticmethod
-    def perform_function(function, operand):
-        if function == "sin":
-            return math.sin(operand)
-        elif function == "cos":
-            return math.cos(operand)
-        elif function == "tan":
-            return math.tan(operand)
-        elif function == "log":
-            return math.log10(operand)
-        else:
-            return "Invalid function"
-
-    @staticmethod
-    def evaluate_expression(
-        characters,
-        operators,
-        functions,
-        left_associative_operators
-    ):
-        trie = Trie()
-        output_queue = []
-        operator_stack = []
-        while characters:
-            character = characters.pop(0)
-            if trie.is_number(character):
-                output_queue.append(character)
-            elif trie.is_function(character, functions):
-                operator_stack.append(character)
-            elif trie.is_operator(character, operators):
-                while (
-                    operator_stack and
-                    trie.is_operator(operator_stack[-1], operators) and
-                    (
-                        trie.precedence(operator_stack[-1], operators) > trie.precedence(character, operators) or
-                        (trie.precedence(operator_stack[-1], operators) == trie.precedence(character, operators) and trie.is_left_associative(character, left_associative_operators))
-                    )
-                ):
-                    output_queue.append(operator_stack.pop())
-                operator_stack.append(character)
-            elif character == "(":
-                operator_stack.append(character)
-            elif character == ")":
-                while operator_stack and operator_stack[-1] != "(":
-                    output_queue.append(operator_stack.pop())
-                if operator_stack and operator_stack[-1] == "(":
-                    operator_stack.pop()
-                if operator_stack and trie.is_function(operator_stack[-1], functions):
-                    output_queue.append(operator_stack.pop())
-
-        while operator_stack:
-            output_queue.append(operator_stack.pop())
-
-        return output_queue    
-
-    @staticmethod
-    def compute_expression(
-        evaluated_expression,
-        operators,
-        functions
-    ):
-        trie = Trie()
-        # Use a stack to handle operator precedence
-        stack = []
-        print(f"result: {evaluated_expression}")
-        for character in evaluated_expression:
-            if trie.is_number(character):
-                stack.append(float(character))
-            elif trie.is_operator(character, operators):
-                operator = character
-                # Pop the last two elements from the stack as operands
-                operand2 = stack.pop()
-                operand1 = stack.pop()
-                operation_result = trie.perform_operation(operand1, operand2, operator)
-                # Perform the operation and push the result back to the stack
-                stack.append(operation_result)
-
-            elif trie.is_function(character, functions):
-                function = character
-                operand = stack.pop()
-                # Perform the function and push the result back to the stack
-                function_result = trie.perform_function(function, operand)
-                stack.append(function_result)
-
-        # The final result is the last element in the stack
-        return stack.pop()
-    
     def compute(self, advanced_formula):
         # Extract the formula and keypath
         computation, variable_keypath = advanced_formula.split("WHERE")
@@ -322,193 +157,132 @@ class Trie:
         if not operators_and_variables:
             return "Invalid operators"
 
-        evaluated_expression = Trie.evaluate_expression(
-            operators_and_variables,
-            operators,
-            functions,
-            left_associative_operators
-        )
-        computed_result = Trie.compute_expression(
-            evaluated_expression,
-            operators,
-            functions
-        )
+        evaluated_expression = self.evaluate_expression(operators_and_variables, operators, functions, left_associative_operators)
+        computed_result = self.compute_expression(evaluated_expression, operators, functions)
         return(computed_result)
+    
+    @staticmethod
+    def is_operator(character, operator_precedence):
+        return character in operator_precedence
 
-        # print(result2)
+    @staticmethod
+    def precedence(character, operator_precedence):
+        return operator_precedence[character]
 
-        #     def evaluate_postfix(output_queue):
-        #         stack = []
-        #         for token in output_queue:
-        #             if isinstance(token, numbers.Number):
-        #                 stack.append(token)
-        #             elif token in operators:
-        #                 operand2 = stack.pop()
-        #                 operand1 = stack.pop()
-        #                 result = operators[token](operand1, operand2)
-        #                 stack.append(result)
-        #         return stack.pop()
-            
-        #     res = evaluate_postfix(output_queue)
-        #     return res
+    @staticmethod
+    def is_function(character, function_precedence):
+        return character in function_precedence
 
-        # expression = ['2', '/', '(', '86', '+', '3', '*', '(', '2', '+', '86', ')', ')']
-        # result = evaluate_expression(expression)
-        # print(f"rsult: {result}") # Output: 0.023255813953488372
+    @staticmethod
+    def is_number(character):
+        if character.isnumeric():
+            return True
 
-
+    @staticmethod
+    def is_left_associative(character, left_associative_operators):
+        return character in left_associative_operators
         
-        # final_res = evaluate_postfix(result)
-        # print(f"final res: {final_res}")
+    @staticmethod
+    def perform_operation(operand1, operand2, operator):
+        if operator == "+":
+            return operand1 + operand2
+        elif operator == "-":
+            return operand1 - operand2
+        elif operator == "*":
+            return operand1 * operand2
+        elif operator == "/":
+            return operand1 / operand2
+        elif operator == "^":
+            return operand1 ** operand2
+        else:
+            return "Invalid operand!"
 
+    @staticmethod
+    def perform_function(function, operand):
+        if function == "sin":
+            return math.sin(operand)
+        elif function == "cos":
+            return math.cos(operand)
+        elif function == "tan":
+            return math.tan(operand)
+        elif function == "log":
+            return math.log10(operand)
+        else:
+            return "Invalid function"
 
-        # def evaluate_expression2(expression):
-        #     stack = []
-        #     for char in expression:
-        #         if char in self.operator_precedence:
-        #             if char == '(':
-        #                 stack.append(char)
-        #             elif char == ')':
-        #                 while stack[-1] != '(':
-        #                     operator = stack.pop()
-        #                     operand2 = stack.pop()
-        #                     operand1 = stack.pop()
-        #                     result = self.operator_precedence[operator](operand1, operand2)
-        #                     stack.append(result)
-        #                 stack.pop() # remove the open parenthesis
-        #             else:
-        #                 while stack and stack[-1] in self.operator_precedence:
-        #                     operator = stack.pop()
-        #                     operand2 = stack.pop()
-        #                     operand1 = stack.pop()
-        #                     result = self.operator_precedence[operator](operand1, operand2)
-        #                     stack.append(result)
-        #                 stack.append(char)
-        #         else:
-        #             stack.append(int(char))
-        #     while stack:
-        #         operator = stack.pop()
-        #         operand2 = stack.pop()
-        #         operand1 = stack.pop()
-        #         result = self.operator_precedence[operator](operand1, operand2)
-        #         stack.append(result)
-        #     return stack.pop()
+    
+    def evaluate_expression(self,
+        characters,
+        operators,
+        functions,
+        left_associative_operators
+    ):
 
-        # expression = [2, '/', '(', 86, '+', 3, '*', '(', 2, '+', 86, ')', ')']
-        # result2 = evaluate_expression2(expression)
+        output_queue = []
+        operator_stack = []
+        while characters:
+            character = characters.pop(0)
+            if self.is_number(character):
+                output_queue.append(character)
+            elif self.is_function(character, functions):
+                operator_stack.append(character)
+            elif self.is_operator(character, operators):
+                while (
+                    operator_stack and
+                    self.is_operator(operator_stack[-1], operators) and
+                    (
+                        self.precedence(operator_stack[-1], operators) > self.precedence(character, operators) or
+                        (self.precedence(operator_stack[-1], operators) == self.precedence(character, operators) and self.is_left_associative(character, left_associative_operators))
+                    )
+                ):
+                    output_queue.append(operator_stack.pop())
+                operator_stack.append(character)
+            elif character == "(":
+                operator_stack.append(character)
+            elif character == ")":
+                while operator_stack and operator_stack[-1] != "(":
+                    output_queue.append(operator_stack.pop())
+                if operator_stack and operator_stack[-1] == "(":
+                    operator_stack.pop()
+                if operator_stack and self.is_function(operator_stack[-1], functions):
+                    output_queue.append(operator_stack.pop())
 
-        # def evaluate_expression(operators_and_variables):
-        #     stack = []
-        #     for token in operators_and_variables:
-        #         if token in operators:
-        #             operator = operators[token]
-        #             operand2 = stack.pop()
-        #             operand1 = stack.pop()
-        #             result = operator(operand1, operand2)
-        #             stack.append(result)
-        #         elif token in self.variables:
-        #             stack.append(self.variables[token])
-        #         else:
-        #             stack.append(float(token))
-        #     return stack.pop()
+        while operator_stack:
+            output_queue.append(operator_stack.pop())
 
+        return output_queue   
 
-        # def evaluate_expression(expression):
-        #     # operators = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv, '^': operator.pow}
-        #     stack = []
-        #     for char in expression:
-        #         if char in operators:
-        #             operand2 = stack.pop()
-        #             operand1 = stack.pop()
-        #             result = operators[char](operand1, operand2)
-        #             stack.append(result)
-        #         else:
-        #             stack.append(float(char))
-        #     return stack.pop()
-
-
-        # for i in match_operators_and_variables:
-        #     if i in variables.values():
-        #         print(f"variable: {i}")
-        #     elif i in operators:
-        #         print(f"operator: {i}")
-
-        # Replace trigonometric and logarithmic functions with their python equivalents
-        # formula = formula.replace("sin", "math.sin")
-        # formula = formula.replace("cos", "math.cos")
-        # formula = formula.replace("tan", "math.tan")
-        # formula = formula.replace("log", "math.log10")
-
-        # computation =computation.split("COMPUTE")[1].strip()
-        # print(computation)
-
-
-        # def process_computation(characters):
-
-        #     output_queue = []
-        #     operator_stack = []
-
-        #     for char in characters:
-        #         if re.match(r"\d+", char):
-        #             output_queue.append(char)
-        #         elif re.match(r"[+-/*^]", char):
-        #             while operator_stack and re.match(r"[+-/*^]", operator_stack[-1]):
-        #                 output_queue.append(operator_stack.pop())
-        #             operator_stack.append(char)
-        #         elif char == "(":
-        #             operator_stack.append(char)
-        #         elif char == (")"):
-        #             while operator_stack and operator_stack[-1] != "(":
-        #                 output_queue.append(operator_stack.pop())
-        #             operator_stack.pop()
-        #     while operator_stack:
-        #         output_queue.append(operator_stack.pop())
-        #     return output_queue
-
-        # value = process_computation(computation)
-        # return value
-
-        # print(f"formula:{formula}, keypath:{keypath}")
-        # # Extract the variable name
-        # variable_name = keypath.split("=")[0].strip()
-        # print(f"variable_name: {variable_name}")
-        # # Get the value of the keypath
-        # variable_value = self.query(keypath.split("QUERY")[1].strip())
-        # print(f"variable_value: {variable_value}")
-
-        # def perform_operation(operand1, operand2, operator):
-        #     if operator == "+":
-        #         return operand1 + operand2
-        #     elif operator == "-":
-        #         return operand1 - operand2
-        #     elif operator == "*":
-        #         return operand1 * operand2
-        #     elif operator == "/":
-        #         return operand1 / operand2
-        #     elif operator == "^":
-        #         return operand1 ** operand2
-
-        # if variable_value != None:
-        # # Replace the variable name with its value in the formula
-        #     formula = formula.replace(variable_name, str(variable_value))
-        #     print(f"formula: {formula}")
-        #     # Use regular expression to find all the numbers and mathematical operators in the formula
-        #     operators_and_variables = re.findall("\d+|[+\-*/^()]", formula)
-        #     print(f"operators_and_variables: {operators_and_variables}")
-        #     # Perform the computation using the list of numbers and mathematical operators
-        #     # ...
-        #     operand1 = int(operators_and_variables[0])
-        #     operand2 = int(operators_and_variables[2])
-        #     operator = operators_and_variables[1]
-        #     result = perform_operation(operand1, operand2, operator)
-        # else: 
-        #     return "Invalid keypath"
-        # Compute the formula
-        # result = evaluate_formula(formula)
-        # result = eval(operators_and_variables[0] + operators_and_variables[1] + operators_and_variables[2])
+    def compute_expression(self,
+        evaluated_expression,
+        operators,
+        functions
+    ):
         
+        # Use a stack to handle operator precedence
+        stack = []
+        print(f"result: {evaluated_expression}")
+        for character in evaluated_expression:
+            if self.is_number(character):
+                stack.append(float(character))
+            elif self.is_operator(character, operators):
+                operator = character
+                # Pop the last two elements from the stack as operands
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                operation_result = self.perform_operation(operand1, operand2, operator)
+                # Perform the operation and push the result back to the stack
+                stack.append(operation_result)
 
- 
+            elif self.is_function(character, functions):
+                function = character
+                operand = stack.pop()
+                # Perform the function and push the result back to the stack
+                function_result = self.perform_function(function, operand)
+                stack.append(function_result)
+
+        # The final result is the last element in the stack
+        return stack.pop()
+
 
 def main():
     data = {"ageqRfZ": 
@@ -529,17 +303,6 @@ def main():
 
     data2 = {"height8BrR": {"age": {"person1": {"age": 3}, "person3": {"person1": "tyXB", "person2": "QOJf"}, "profession": {"person2": "OHdc"}}, "height": {"profession": {"person3": "64u5", "level": 22}, "name": {"street": "aXl0"}, "level": {"level": 68, "street": "SPUo"}}}}
 
-    # trie = Trie()
-    # for key, value in data.items():
-    #     trie.put(key, value)
-
-    # for key, value in data2.items():
-    #     trie.put(key, value)
-    
-    # trie.delete("height8BrR")
-    
-    # # print(trie.get("height8BrR"))
-    # print(trie.query("ageqRfZ.level.person2.age"))
 
     trie = Trie()
     for key, value in data.items():
