@@ -37,8 +37,8 @@ class MathExpressionEvaluator:
             return operand1 / operand2
         elif operator == '^':
             return operand1 ** operand2
-        else:
-            return 'Invalid operand!'
+
+        return 'Invalid operator! The acceptable operators the following: +, -, *, /, ^'
 
     @staticmethod
     def perform_function(function: str, operand: float) -> float:
@@ -50,8 +50,8 @@ class MathExpressionEvaluator:
             return math.tan(operand)
         elif function == 'log':
             return math.log10(operand)
-        else:
-            return 'Invalid function!'
+    
+        return 'Invalid function! The acceptable functions are the following: sin, cos, tan, log'
 
     def evaluate_expression(
         self,
@@ -104,7 +104,6 @@ class MathExpressionEvaluator:
         
         # Use a stack to handle operator precedence
         stack = []
-        print(f"result: {evaluated_expression}")
         for character in evaluated_expression:
             if self.is_number(character):
                 stack.append(float(character))
