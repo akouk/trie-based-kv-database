@@ -107,11 +107,10 @@ class DataGenerator(KeyValuePairGenerator):
         # Function that reads the given .txt file and stores each lines key and its data type in a dictionary
     def read_key_file(self, input_file: str) -> dict:
         key_dict = {}
+        with open(self.input_file, 'r') as f:
+            input_key_file_lines = [line.rstrip('\n') for line in f]
 
-        key_file = open(input_file, "r")
-        file_lines = key_file.readlines()
-        key_file.close()
-        for each_line in file_lines:
+        for each_line in input_key_file_lines:
             try:
                 key_name, data_type = each_line.strip().split()
                 key_dict[key_name] = data_type
@@ -214,3 +213,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# python3 random_data_generation.py -k keyFile.txt -n 50 -d 3 -l 4 -m 5 -o outputFile.txt
