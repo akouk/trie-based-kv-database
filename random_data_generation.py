@@ -37,7 +37,7 @@ class ValueGenerator:
             return self.generate_random_float(0.0,100.0)
 
 
-class KeyValuePairGenerator:
+class KeyValuePairGenerator():
       
     def __init__(self, kv_dict: dict) -> None:
         self.kv_dict = kv_dict
