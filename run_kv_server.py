@@ -5,7 +5,6 @@ import threading
 import typing as tp
 from KVServer import KVServer
 
-
 class Server:
     def __init__(self, port: int, host: str) -> None:
         self.host = host
@@ -67,7 +66,7 @@ class Server:
                         conn.send(f'“{key}” -> []'.encode(self.format))
                         continue
                     
-                    conn.send(f"“{key}” -> {self.print_data(get_result)}".encode(self.format))
+                    conn.send(f"“{key}” -> {print_data(get_result)}".encode(self.format))
 
                 except (ValueError, TypeError) as error:
                     print("[Server Thread]: Server-Error:",  error)
@@ -97,7 +96,7 @@ class Server:
                     conn.send(f'“{key}” -> {query_result}'.encode(self.format))
                     continue
                 
-                conn.send(f"“{key}” -> {self.print_data(get_result)}".encode(self.format))
+                conn.send(f"“{key}” -> {print_data(get_result)}".encode(self.format))
 
             elif msg.lower().startswith('compute'):
                 try:
@@ -116,27 +115,6 @@ class Server:
 
         print("[Server Thread]: Client disconnect!")
         conn.close()
-
-    def print_data(self, obj: dict) -> str:
-
-        def handle_value(v):
-            if isinstance(v, dict):
-                return f'[ {self.print_data(v)} ]'
-
-            elif isinstance(v, list):
-                return f'[ {" | ".join(f"“{str(element)}”" for element in v)} ]'
-
-            elif isinstance(v, (int, float)):
-                return str(v)
-
-            elif v is None:
-                return 'null'
-
-            else:
-                return f'“{str(v)}”'
-
-        return f' | '.join([F'“{k}” -> {handle_value(v)}' for k, v in obj.items()])
-
 
     def start(self):
         self.server_socket.listen()
@@ -161,6 +139,25 @@ class Server:
             self.server_socket.close()
             for thread in self.threads:
                 thread.join(timeout=2)
+
+def print_data(obj: dict) -> str:
+
+    def handle_value(v):
+        if isinstance(v, dict):
+            return f'[ {print_data(v)} ]'
+
+        elif isinstance(v, list):
+            return f'[ {" | ".join(f"{handle_value(element)}" for element in v)} ]'
+
+        elif isinstance(v, (int, float)):
+            return str(v)
+
+        elif v is None:
+            return 'null'
+
+        return f'“{str(v)}”'
+
+    return f' | '.join([F'“{k}” -> {handle_value(v)}' for k, v in obj.items()])
 
 
 def run_server_arguments():
