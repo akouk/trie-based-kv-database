@@ -1,4 +1,4 @@
-# Distributed, fault-tolerant, Key:Value Database
+# Distributed Trie-based Key:Value Database
 
 This is a distributed, fault-tolerant, key-value database implementation that allows clients to connect with multiple servers to store and retrieve data. The key-value pairs are stored in a Trie data structure and the servers use a consensus algorithm to ensure data consistency.
 
@@ -52,9 +52,11 @@ The client will then listen for input and take these commands:
   
 ## Examples
   
-  
+Assume that the data stored on the servers are the following:
 ```python
-data = {"key1": {"key2" : {"key3": 4, "key4": 8}}}
+{"key1": {"key2" : {"key3": 4, "key4": 8}}}
+{"key5": {"key6": 2, "key7": 6}}
+{"key8": {"key9": {"key10": {"key11": 3} , "key12": {"key13": 7, "key14": 11}, "key15": {"key16": 5}}}}}
 ```
   
   
@@ -62,16 +64,30 @@ To retrieve the value of key1 enter the following command:
 ```python
 GET key1
 ```
+This will print out the following:
+```python
+"key1" -> {"key2" : {"key3": 4, "key4": 8}}
+```
+ 
+  
+  
   
 To delete the key-value pair of key1 enter the following command:
 ```python
 DELETE key1
+  
 ```
   
-To retrieve value of key path key1.key2.key3 enter the following command:
+  
+To retrieve value of key path key1.key2 enter the following command:
 ```python
 QUERY key1.key2.key3
 ```
+This will print out the following:
+```python
+"key1.key2" -> {"key3": 4, "key4": 8}
+```
+  
   
 To compute  value of key path key1.key2.key3 enter the following command:
 ```python
