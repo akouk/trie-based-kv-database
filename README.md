@@ -19,13 +19,13 @@ The Trie-based key-value database allows the user to store, retrieve, delete, qu
 ### Running the servers
 To run the project, you need to start the servers first. Each server runs on a separate script. Use the following command to run the servers:
 ```python
-python3 run_kv_server.py -p <port> -a <ip_address>
+python3 run_kv_server.py <ip_address> -p <port> -a 
 ```
 
 #### Parameters
-
-- '-p': the port of the server
 - '-a': the ip address of the server
+- '-p': the port of the server
+
 
 
 ## Running the client
@@ -48,7 +48,38 @@ The client will then listen for input and take these commands:
   EXIT: closses the connection
   
   
-## RNotes
+  
+  
+## Examples
+  
+  
+```python
+data = {"key1": {"key2" : {"key3": 4, "key4": 8}}}
+```
+  
+  
+To retrieve the value of key1 enter the following command:
+```python
+GET key1
+```
+  
+To delete the key-value pair of key1 enter the following command:
+```python
+DELETE key1
+```
+  
+To retrieve value of key path key1.key2.key3 enter the following command:
+```python
+QUERY key1.key2.key3
+```
+  
+To compute  value of key path key1.key2.key3 enter the following command:
+```python
+QUERY key1.key2.key3
+```
+  
+  
+## Notes
 - Make 
 
 
