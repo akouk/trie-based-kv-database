@@ -14,6 +14,17 @@ The key-value database project consists of two programs: a Key-Value client and 
 The Trie-based key-value database allows the user to store, retrieve, delete, query and compute mathematical expressions using a trie data structure. The system is composed of a client and multiple servers. The client is responsible for sending commands to the servers, while the servers are responsible for storing and processing the data. The system uses Trie data structure to store the key-value pairs, making it efficient for querying and computing mathematical expression.
 
 
+| Command | Desctiprion|
+| --- | --- | |
+| `GET <key>` | retrieves the value of the specified key |
+| `DELETE <key>` | deletes the key-value pair of the specified key |
+| `QUERY <keypath>` | retrieves key-value pairs (or values) of the specified key path |
+| `COMPUTE <expression>` | computes a mathematican expression |
+| `EXIT` | closes connection |
+
+
+
+
 ## Running the project
 
 ### Running the servers
