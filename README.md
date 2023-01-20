@@ -54,19 +54,21 @@ The client will then listen for input and take these commands:
   
 Assume that the data stored on the servers are the following:
 ```python
-{"key1": {"key2" : {"key3": 4, "key4": 8}}}
-{"key5": {"key6": 2, "key7": 6}}
-{"key8": {"key9": {"key10": {"key11": 3} , "key12": {"key13": 7, "key14": 11}, "key15": {"key16": 5}}}}}
+{'key1': {'key2' : {'key3': 4, 'key4': 8}}}
+{'key5': {'key6': 2, 'key7': 6}}
+{'key8': {"key9': {'key10': {'key11': 3} , 'key12': {'key13': 7, 'key14': 11}, 'key15': {'key16': 5}}}}
 ```
   
   
 To retrieve the value of key1 enter the following command:
 ```python
-GET key1
+GET key5
 ```
+
+The high-level key `key5`
 This will print out the following:
 ```python
-"key1" -> {"key2" : {"key3": 4, "key4": 8}}
+'key5' -> {'key6': 2, 'key7': 6}
 ```
  
   
@@ -74,7 +76,7 @@ This will print out the following:
   
 To delete the key-value pair of key1 enter the following command:
 ```python
-DELETE key1
+DELETE key5
   
 ```
   
@@ -83,9 +85,10 @@ To retrieve value of key path key1.key2 enter the following command:
 ```python
 QUERY key1.key2.key3
 ```
+
 This will print out the following:
 ```python
-"key1.key2" -> {"key3": 4, "key4": 8}
+'key1.key2' -> {'key3': 4, 'key4': 8}
 ```
   
   
