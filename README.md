@@ -94,20 +94,32 @@ DELETE key5
   
 To retrieve value of key path key1.key2 enter the following command:
 ```python
-QUERY key1.key2.key3
+QUERY key1.key2
 ```
 
 This will print out the following:
 ```python
 'key1.key2' -> {'key3': 4, 'key4': 8}
 ```
-  
+
   
 To compute  value of key path key1.key2.key3 enter the following command:
 ```python
-QUERY key1.key2.key3
+COMPUTE x+2 WHERE x = QUERY key5.key6
+```
+This will print out the following:
+```python
+2
 ```
   
+To compute  value of key path key1.key2.key3 enter the following command:
+```python
+CMOPUTE x+2*(y+3) WHERE x = QUERY key1.key2.key3 AND y = QUERY key8.key9.key12.key14
+```
+ This will print out the following:
+```python
+32
+```
   
 ## Notes
 - Make 
