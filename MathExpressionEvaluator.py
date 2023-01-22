@@ -3,8 +3,7 @@ from decimal import Decimal
 import typing as tp
 
 class MathExpressionEvaluator:
-
-    # A function to check if the given character is an operator
+    
     @staticmethod
     def is_operator(character: str, operator_precedence: dict) -> bool:
         """
@@ -13,7 +12,6 @@ class MathExpressionEvaluator:
         """
         return character in operator_precedence
 
-    # A function to check the precedence of an operator
     @staticmethod
     def precedence(character: str, operator_precedence: dict) -> int:
         """
@@ -21,7 +19,6 @@ class MathExpressionEvaluator:
         """
         return operator_precedence[character]
 
-    # A function to check if the given character is a function
     @staticmethod
     def is_function(character: str, function_precedence: dict) -> bool:
         """
@@ -32,6 +29,9 @@ class MathExpressionEvaluator:
 
     @staticmethod
     def is_float(character):
+        """
+        Check if the given character is a float number
+        """
         try:
             float(character)
             return True
@@ -40,13 +40,15 @@ class MathExpressionEvaluator:
     
     @staticmethod
     def is_int(character: str) -> bool:
+        """
+        Check if the given character is an integer
+        """
         try:
             int(character)
             return True
         except ValueError:
             return False
        
-    # A function to check if the given operator is left-associative
     @staticmethod
     def is_left_associative(character: str, left_associative_operators: list) -> bool:
         """
@@ -54,11 +56,10 @@ class MathExpressionEvaluator:
         """
         return character in left_associative_operators
         
-    # A function to perform a mathematical operation between two operands using the given operator
     @staticmethod
     def perform_operation(operand1, operand2, operator):
         """
-        Perform the operation based on the operator
+        Perform a mathematical operation between two operands using the given operator
         """
         operand1 = Decimal(operand1)
         operand2 = Decimal(operand2)
@@ -77,6 +78,9 @@ class MathExpressionEvaluator:
 
     @staticmethod
     def perform_function(function, operand):
+        """
+        Perform a mathematical function operation based the given operator
+        """
         operand = Decimal(operand)
         if function == 'sin':
             return math.sin(operand)
@@ -95,25 +99,20 @@ class MathExpressionEvaluator:
         operators: dict,
         functions: dict,
         left_associative_operators: tp.List[str]
-        ) -> tp.List[tp.Union[str, int]]:
+    ) -> tp.List[tp.Union[str, int]]:
+        
         # Initialize two empty lists, one for output and one for operators
         output_queue = []
         operator_stack = []
-        # Iterate through the characters
+
         while characters:
             character = characters.pop(0)
-            # Check if the current character is an int 
             if self.is_int(character):
-                # Append the character to the queue as int
                 output_queue.append(character)
-            # Check if the current character is a float 
             elif self.is_float(character):
-                # Append the number to the queue as float
                 output_queue.append(character)
-            # Check if the current character is a function and add it to stack
             elif self.is_function(character, functions):
                 operator_stack.append(character)
-            # Check if the current character is an operator
             elif self.is_operator(character, operators):
                 # While the operator stack is not empty and the last element is an operator
                 # with greater precedence or has the same precedence but is left associative
@@ -130,10 +129,8 @@ class MathExpressionEvaluator:
                     output_queue.append(operator_stack.pop())
                 # Append the current operator to the operator stack
                 operator_stack.append(character)
-            # Check if the current character is "("
             elif character == '(':
                 operator_stack.append(character)
-            # Check if the current character is ")"
             elif character == ')':
                 # While the operator stack is not empty and the last element is not "("
                 while operator_stack and operator_stack[-1] != '(':
@@ -151,7 +148,6 @@ class MathExpressionEvaluator:
         while operator_stack:
             output_queue.append(operator_stack.pop())
 
-        # Return the output queue
         return output_queue
 
     def compute_expression(
@@ -163,17 +159,11 @@ class MathExpressionEvaluator:
 
         # Use a stack to handle operator precedence
         stack = []
-        # Iterate through the evaluated expression
         for character in evaluated_expression:
-            # Check if the current character is an int
             if self.is_int(character):
-                # Append the number to the stack as int
                 stack.append(int(character))
-            # Check if the current character is a float
             elif self.is_float(character):
-                # Append the number to the stack as float
                 stack.append(float(character))
-            # Check if the current character is an operator
             elif self.is_operator(character, operators):
                 operator = character
                 # Pop the last two elements from the stack as operands
