@@ -8,17 +8,17 @@ from KVServer import KVServer
 class Server:
     def __init__(self, port: int, host: str) -> None:
         """
+        Constructor method for the Server class
+        param
         Initialize the server with a given host and port
         """
 
-        # Initialize the server with a given host and port
         self.host = host
         self.port = port
         # Set the format for encoding and decoding messages to 'utf-8'
         self.format = 'utf-8'
         # Set the maximum size of messages to 10000 bytes
         self.head = 10000
-        # Create a socket using the socket.AF_INET and socket.SOCK_STREAM options
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Bind the socket to the given host and port
         self.server_socket.bind((self.host, self.port))
@@ -36,20 +36,16 @@ class Server:
         print(f'[Server Thread]: New connection {addr} connected')
         # Set a variable to indicate that the client is connected
         connected = True
-        # Create an instance of the KVServer class
         kv_server = KVServer()
         # Enter a loop that continues as long as the client is connected and the server is running
         while connected and running:
             # Receive a message from the client
             msg = conn.recv(self.head).decode(self.format)
             
-            # check if the message is empty
             if not msg:
                 continue
 
-            # if the message starts with 'exit', close the connection 
             if msg.lower().startswith('exit'):
-                # Close the connection by setting the connected variable to false
                 connected = False
                 conn.send('OK'.encode(self.format))
                 continue
@@ -58,13 +54,12 @@ class Server:
             if msg.lower().startswith('ping'):
                 conn.send('PONG'.encode(self.format))
 
-            # if the message starts with 'put', parse the data using json and store it using the put_request method of the KVServer class
             if msg.lower().startswith('put'):
                 _, data_str = msg.split(' ', 1)
+                
                 try:
-                    # Use json.loads to parse the data from the string
                     data_to_put = json.loads(data_str)
-                    # Iterate over the key-value pairs and store them using the put_request method of the KVServer class
+
                     for key, value in data_to_put.items():
                         kv_server.put_request(key, value)
                     conn.send('OK'.encode(self.format))
@@ -73,14 +68,12 @@ class Server:
                     conn.send('ERROR'.encode(self.format))
 
                 except Exception as error:
-                    # Print an error message if an exception occurs
-                    # Server error
                     print("[Server Thread]:", error)
                     conn.send('ERROR'.encode(self.format))
 
             elif msg.lower().startswith('get'):
                 print("[Server Thread]: GET", msg)
-                # Retrieve the data using the get_request method of the KVServer class
+
                 try:
                     _, key = msg.split(' ', 1)
                     get_result = kv_server.get_request(key)
@@ -98,7 +91,6 @@ class Server:
                 _, key = msg.split(' ')
 
                 try:
-                    # Delete the key-value pair using the delete_request method of the KVServer class
                     kv_server.delete_request(key)
 
                 except:
@@ -106,9 +98,9 @@ class Server:
 
                 conn.send('OK'.encode(self.format))
 
-            # if the message starts with 'query', retrieve the value of the key using the query_request method of the KVServer class
             elif msg.lower().startswith('query'):
                 _, keypath = msg.split(' ')
+                
                 try:
                     query_result = kv_server.query_request(keypath)
 
@@ -126,7 +118,6 @@ class Server:
                 
                 conn.send(f"“{keypath}” -> {query_result}".encode(self.format))
 
-            # if the message starts with 'compute', compute the result using the compute_request method of the KVServer class
             elif msg.lower().startswith('compute'):
                 
                 try:
@@ -143,7 +134,7 @@ class Server:
 
                 conn.send(str(computed_result).encode(self.format))
 
-        print("[Server Thread]: Client disconnect!")
+        print("[Server Thread]: Client disconnected!")
         conn.close()
 
     def start(self):
@@ -155,7 +146,6 @@ class Server:
         # enter an infinite loop to listen for client connections
         try:
             while True:
-                # accept a connection from a client
                 conn, addr = self.server_socket.accept()
                 # create an event for signaling when to stop the thread
                 running = threading.Event()
@@ -214,9 +204,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# python3 run_kv_server.py -p 4000 -a localhost
-# python3 run_kv_server.py -p 5000 -a localhost
-# python3 run_kv_server.py -p 6000 -a localhost
-# python3 run_kv_server.py -p 7000 -a localhost
