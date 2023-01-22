@@ -28,7 +28,7 @@ class MathExpressionEvaluator:
         return character in function_precedence
 
     @staticmethod
-    def is_float(character):
+    def is_float(character: str) -> bool:
         """
         Check if the given character is a float number
         """
@@ -79,7 +79,7 @@ class MathExpressionEvaluator:
     @staticmethod
     def perform_function(function, operand):
         """
-        Perform a mathematical function operation based the given operator
+        Perform a mathematical function operation based on the given operator
         """
         operand = Decimal(operand)
         if function == 'sin':
@@ -114,8 +114,9 @@ class MathExpressionEvaluator:
             elif self.is_function(character, functions):
                 operator_stack.append(character)
             elif self.is_operator(character, operators):
-                # While the operator stack is not empty and the last element is an operator
-                # with greater precedence or has the same precedence but is left associative
+                # While the operator stack is not empty 
+                # and the last element is an operator with greater precedence
+                # or has the same precedence but is left associative
                 while (
                     operator_stack and
                     self.is_operator(operator_stack[-1], operators) and
