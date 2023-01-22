@@ -4,6 +4,7 @@ import typing as tp
 from MathExpressionEvaluator import MathExpressionEvaluator
 
 class TrieNode:
+    
     def __init__(self) -> None:
         self.children = {} # a dictionary mapping characters to child nodes
         self.value = None # the value stored at this node (if any)
@@ -16,11 +17,10 @@ class TrieNode:
             del self
 
 class Trie:
-
     
     def __init__(self) -> None:
-        self.root = TrieNode() # create the root node of the trie
-        self.variables = {} # dictionary to store variable names and their values
+        self.root = TrieNode() 
+        self.variables = {} 
         self.operators = {'+':1, '-':1, '*':2, '/':2, '^':3}
         self.functions = {'sin':1, 'cos':1, 'tan':1, 'log':1}
         self.left_associative_operators = ['+', '-', '*', '/']
@@ -41,10 +41,8 @@ class Trie:
    
     def get(self, key: str) -> str:
         current_root = self.root
-        # follow the path of the key in the trie, creating new nodes as needed
         for char in key:
             if char not in current_root.children:
-                # the key does not exist in the trie
                 return None
             current_root = current_root.children[char]
 
@@ -61,12 +59,10 @@ class Trie:
 
     def delete(self, key:str) -> str:
         current_root = self.root
-        # follow the path of the key in the trie, creating new nodes as needed
         path: tp.List[TrieNode] = []
         for char in key:
             if char not in current_root.children:
-                # the key is not in the trie
-                return
+                return # the key is not in the trie
             path.append(current_root)
             current_root = current_root.children[char]
 
@@ -150,8 +146,6 @@ class Trie:
         # Replace the variables with their values in the formula
         for variable, value in variables.items():
             computation = computation.replace(variable, str(value))
-        
-        print(f"computation: {computation}")
 
         variables = re.findall("(\d+(?:\.\d+)?)", computation)
         operators_functions_and_variables.extend(variables)
