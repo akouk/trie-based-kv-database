@@ -7,38 +7,64 @@ from KVServer import KVServer
 
 class Server:
     def __init__(self, port: int, host: str) -> None:
+        """
+        Initialize the server with a given host and port
+        """
+
+        # Initialize the server with a given host and port
         self.host = host
         self.port = port
+        # Set the format for encoding and decoding messages to 'utf-8'
         self.format = 'utf-8'
+        # Set the maximum size of messages to 10000 bytes
         self.head = 10000
+        # Create a socket using the socket.AF_INET and socket.SOCK_STREAM options
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Bind the socket to the given host and port
         self.server_socket.bind((self.host, self.port))
+        # Listen for client connections
         self.server_socket.listen(1)
+        # Initialize an empty list to store client threads
         self.threads: tp.List[threading.Thread] = []
 
     def handle_client(self, conn: socket.socket, addr: tp.Tuple[tp.Any, ...], running):
-        print(f'[Server Thread]: New connection {addr} connected')
-        connected = True
-        kv_server = KVServer()
-        while connected and running:
-            msg = conn.recv(self.head).decode(self.format)
+        """
+        Handle a client connection by processing messages and performing appropriate actions
+        """
 
+        # Print a message indicating that a new connection has been established
+        print(f'[Server Thread]: New connection {addr} connected')
+        # Set a variable to indicate that the client is connected
+        connected = True
+        # Create an instance of the KVServer class
+        kv_server = KVServer()
+        # Enter a loop that continues as long as the client is connected and the server is running
+        while connected and running:
+            # Receive a message from the client
+            msg = conn.recv(self.head).decode(self.format)
+            
+            # check if the message is empty
             if not msg:
                 continue
 
+            # if the message starts with 'exit', close the connection 
             if msg.lower().startswith('exit'):
+                # Close the connection by setting the connected variable to false
                 connected = False
                 conn.send('OK'.encode(self.format))
                 continue
-
+            
+            # if the message starts with 'ping', send back a 'PONG' message
             if msg.lower().startswith('ping'):
                 conn.send('PONG'.encode(self.format))
 
+            # if the message starts with 'put', parse the data using json and store it using the put_request method of the KVServer class
             if msg.lower().startswith('put'):
                 _, data_str = msg.split(' ', 1)
                 try:
-                    # Load the data from the string
+                    # Use json.loads to parse the data from the string
                     data_to_put = json.loads(data_str)
+                    # Iterate over the key-value pairs and store them using the put_request method of the KVServer class
                     for key, value in data_to_put.items():
                         kv_server.put_request(key, value)
                     conn.send('OK'.encode(self.format))
@@ -47,12 +73,14 @@ class Server:
                     conn.send('ERROR'.encode(self.format))
 
                 except Exception as error:
+                    # Print an error message if an exception occurs
                     # Server error
                     print("[Server Thread]:", error)
                     conn.send('ERROR'.encode(self.format))
 
             elif msg.lower().startswith('get'):
                 print("[Server Thread]: GET", msg)
+                # Retrieve the data using the get_request method of the KVServer class
                 try:
                     _, key = msg.split(' ', 1)
                     get_result = kv_server.get_request(key)
@@ -61,31 +89,31 @@ class Server:
                         conn.send('NOT FOUND'.encode(self.format))
                         continue
                     
-                    # TODO: Check if "get_request" returns `null` value
-                    if get_result == "null":
-                        conn.send(f'“{key}” -> []'.encode(self.format))
-                        continue
-                    
-                    conn.send(f"“{key}” -> {print_data(get_result)}".encode(self.format))
+                    conn.send(f"“{key}” -> {get_result}".encode(self.format))
 
                 except (ValueError, TypeError) as error:
                     print("[Server Thread]: Server-Error:",  error)
 
             elif msg.lower().startswith('delete'):
                 _, key = msg.split(' ')
+
                 try:
+                    # Delete the key-value pair using the delete_request method of the KVServer class
                     kv_server.delete_request(key)
-                    conn.send('OK'.encode(self.format))
+
                 except:
                     conn.send('ERROR'.encode(self.format))
 
+                conn.send('OK'.encode(self.format))
+
+            # if the message starts with 'query', retrieve the value of the key using the query_request method of the KVServer class
             elif msg.lower().startswith('query'):
                 _, keypath = msg.split(' ')
                 try:
                     query_result = kv_server.query_request(keypath)
 
                 except Exception:
-                    conn.send('NOT FOUND'.encode(self.format))
+                    conn.send('EXCEPTION ERROR'.encode(self.format))
                     continue
 
                 if query_result is None:
@@ -93,72 +121,65 @@ class Server:
                     continue
                 
                 if isinstance(query_result, str):
-                    conn.send(f'“{key}” -> {query_result}'.encode(self.format))
+                    conn.send(f'“{keypath}” -> {query_result}'.encode(self.format))
                     continue
                 
-                conn.send(f"“{key}” -> {print_data(get_result)}".encode(self.format))
+                conn.send(f"“{keypath}” -> {query_result}".encode(self.format))
 
+            # if the message starts with 'compute', compute the result using the compute_request method of the KVServer class
             elif msg.lower().startswith('compute'):
+                
                 try:
-                    compute_result = kv_server.compute_request(msg.upper())
+                    computed_result = kv_server.compute_request(msg)
+                    
 
                 except Exception:
-                    conn.send('NOT FOUND'.encode(self.format))
+                    conn.send(('EXCEPTION ERROR!').encode(self.format))
                     continue
 
-                if compute_result is None:
-                    conn.send('Not found'.encode())
+                if computed_result is None:
+                    conn.send('NOT FOUND'.encode())
                     continue
 
-                # !ERROR: Check the results of compute
-                conn.send(str(compute_result).encode(self.format))
+                conn.send(str(computed_result).encode(self.format))
 
         print("[Server Thread]: Client disconnect!")
         conn.close()
 
     def start(self):
+        """
+        Start the server and listen for client connections
+        """
         self.server_socket.listen()
 
+        # enter an infinite loop to listen for client connections
         try:
             while True:
+                # accept a connection from a client
                 conn, addr = self.server_socket.accept()
+                # create an event for signaling when to stop the thread
                 running = threading.Event()
                 running.set()
+                # create a new thread for the client
                 thread = threading.Thread(
                     target=self.handle_client,
                     args=(conn, addr, running)
                 )
 
+                # append the thread to the list of threads
                 self.threads.append(thread)
+                # start the thread
                 thread.start()
-
+        
+        # if the server is stopped by the user using Ctrl+C
         except KeyboardInterrupt:
             print("[Server]: Stopped by Ctrl+C")
-
+        
+        # close the server socket and join all threads
         finally:
             self.server_socket.close()
             for thread in self.threads:
                 thread.join(timeout=2)
-
-def print_data(obj: dict) -> str:
-
-    def handle_value(v):
-        if isinstance(v, dict):
-            return f'[ {print_data(v)} ]'
-
-        elif isinstance(v, list):
-            return f'[ {" | ".join(f"{handle_value(element)}" for element in v)} ]'
-
-        elif isinstance(v, (int, float)):
-            return str(v)
-
-        elif v is None:
-            return 'null'
-
-        return f'“{str(v)}”'
-
-    return f' | '.join([F'“{k}” -> {handle_value(v)}' for k, v in obj.items()])
-
 
 def run_server_arguments():
     parser = argparse.ArgumentParser()
@@ -193,3 +214,9 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# python3 run_kv_server.py -p 4000 -a localhost
+# python3 run_kv_server.py -p 5000 -a localhost
+# python3 run_kv_server.py -p 6000 -a localhost
+# python3 run_kv_server.py -p 7000 -a localhost
