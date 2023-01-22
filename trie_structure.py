@@ -1,6 +1,7 @@
 import re
 import numbers
-import MathExpressionEvaluator
+import typing as tp
+from MathExpressionEvaluator import MathExpressionEvaluator
 
 class TrieNode:
     def __init__(self) -> None:
@@ -8,7 +9,6 @@ class TrieNode:
         self.value = None # the value stored at this node (if any)
         self.is_leaf = False # a boolean attribute that indicates whether the currnet node is a leaf node in the trie or not
         self.is_deleted = False # a flag indicating whether the node has been deleted
-        self.math_expression_evaluator = MathExpressionEvaluator()
 
     def remove_if_unused(self) -> None:
         # remove the node if it has no children and is marked as deleted
@@ -17,6 +17,7 @@ class TrieNode:
 
 class Trie:
 
+    
     def __init__(self) -> None:
         self.root = TrieNode() # create the root node of the trie
         self.variables = {} # dictionary to store variable names and their values
@@ -24,6 +25,7 @@ class Trie:
         self.functions = {'sin':1, 'cos':1, 'tan':1, 'log':1}
         self.left_associative_operators = ['+', '-', '*', '/']
         self.computed_value = None
+        self.operators_and_variables = []
 
     def put(self, key: str, value:str) -> None:
         current_root = self.root # start at the root of the trie
@@ -45,21 +47,22 @@ class Trie:
                 # the key does not exist in the trie
                 return None
             current_root = current_root.children[char]
-            # print(f"current_root = {current_root.childern}")
-        
+
         if current_root.is_leaf:
             if not current_root.is_deleted:
                 return current_root.value
             else:
-                return "Deleted"
+                return f'Key: {key} has been deleted!'
         else:
             return None
+        
+        
 
 
     def delete(self, key:str) -> str:
         current_root = self.root
         # follow the path of the key in the trie, creating new nodes as needed
-        path = []
+        path: tp.List[TrieNode] = []
         for char in key:
             if char not in current_root.children:
                 # the key is not in the trie
@@ -72,7 +75,7 @@ class Trie:
         path.append(current_root)
         # remove all nodes that are no longer being used
         for node in path:
-            node.self.remove_if_unused()
+            node.remove_if_unused()
 
     def query(self, keypath: str) -> str:
         # split the keypath into individual keys
@@ -85,7 +88,6 @@ class Trie:
 
         def search_dictionary( dic: dict, keys: list):
             for key in keys[1:]:
-                # print(f"key: {key}")
                 if key in dic:
                     dic = dic[key]
                 else:
@@ -96,33 +98,27 @@ class Trie:
             
             return dic
 
-
-        if value_of_high_level_key == None:
-            print(f"{high_level_key} -> []")
-            # keypath_value == None
-        else:
-            if isinstance(value_of_high_level_key, dict):
-                keypath_value = search_dictionary(value_of_high_level_key, keys)
+        if isinstance(value_of_high_level_key, dict):
+            keypath_value = search_dictionary(value_of_high_level_key, keys)
             
         return keypath_value
 
-    def compute(self, advanced_formula):
-        math_expression_evaluator = self.math_expression_evaluator
+    def compute(self, formula):
         # Extract the formula and keypath
-        computation, variable_keypath = advanced_formula.split("WHERE")
+        computation, variable_keypath = formula.split("where")
 
-        computation_formula = re.search(r"COMPUTE (.*)", computation)
+        computation_formula = re.search(r"compute (.*)", computation)
         if not computation_formula:
-            raise ValueError("Invalid computation formula")
+            return "Invalid computation formula"
         
         variables = self.variables
-        if "AND" in variable_keypath:
-            variable_values = variable_keypath.split("AND")
+        if "and" in variable_keypath:
+            variable_values = variable_keypath.split("and")
             for variable_value in variable_values:
 
-                match_value_formula = re.search(r"(\w+) = QUERY (.*)", variable_value)          
+                match_value_formula = re.search(r"(\w+) = query (.*)", variable_value)          
                 if not match_value_formula:
-                    return "Invalid computation formula. Must be in the format 'COMPUTE f(x)'"
+                    return "Invalid value formula"
 
                 variable_name = match_value_formula.group(1).strip()
                 variable_value_keypath = match_value_formula.group(2).strip()
@@ -130,10 +126,9 @@ class Trie:
                 
                 if isinstance(variable_value, numbers.Number):
                     variables[variable_name] = variable_value
-                else:
-                    return "Variable is not a number"
+
         else:
-            match_value_formula = re.search(r"(\w+) = QUERY (.*)", variable_keypath)          
+            match_value_formula = re.search(r"(\w+) = query (.*)", variable_keypath)          
             if not match_value_formula:
                 return "Invalid value formula"
             
@@ -149,74 +144,35 @@ class Trie:
         operators = self.operators
         functions = self.functions
         left_associative_operators = self.left_associative_operators
+        expression_evaluator = MathExpressionEvaluator()
+        operators_functions_and_variables = self.operators_and_variables
 
         # Replace the variables with their values in the formula
         for variable, value in variables.items():
             computation = computation.replace(variable, str(value))
         
-        operators_and_variables = re.findall("\d+|[+-/*^()]|sin|cos|tan|log10", computation)
-        if not operators_and_variables:
-            return "Invalid operators"
+        print(f"computation: {computation}")
 
-        evaluated_expression = math_expression_evaluator.evaluate_expression(operators_and_variables, operators, functions, left_associative_operators)
-        computed_result = math_expression_evaluator.compute_expression(evaluated_expression, operators, functions)
+        variables = re.findall("(\d+(?:\.\d+)?)", computation)
+        operators_functions_and_variables.extend(variables)
+
+        operators_and_functions = re.findall("[+-/*^()]|sin|cos|tan|log10", computation)
+        operators_functions_and_variables.extend(operators_and_functions)
+
+        dot = "."
+        if dot in operators_functions_and_variables:
+            operators_functions_and_variables.remove(dot)
+
+        evaluated_expression = expression_evaluator.evaluate_expression(
+            operators_functions_and_variables, 
+            operators, 
+            functions, 
+            left_associative_operators
+        )
+        computed_result = expression_evaluator.compute_expression(
+            evaluated_expression, 
+            operators, 
+            functions
+        )
+        
         return(computed_result)
-    
-
-
-def main():
-    data = {"ageqRfZ": 
-                {"level": 
-                    {"person2": 
-                        {"age": 86, "name": "PzOQ", "person1": "Anqr", "person2": "Gt9U", "height": 2
-                        }
-                    }, "person1": 
-                        {"level": 
-                            {"profession": "5Ik8", "street": "W4Pg", "person1": "p589"
-                            }, 
-                        "profession": 
-                                {"name": "f4bH", "person3": "xmkw"
-                            }
-                        }
-                }
-            }
-
-    data2 = {"height8BrR": {"age": {"person1": {"age": 3}, "person3": {"person1": "tyXB", "person2": "QOJf"}, "profession": {"person2": "OHdc"}}, "height": {"profession": {"person3": "64u5", "level": 22}, "name": {"street": "aXl0"}, "level": {"level": 68, "street": "SPUo"}}}}
-
-
-    trie = Trie()
-    for key, value in data.items():
-        trie.put(key, value)
-    print(trie.query('ageqRfZ.level.person2.age'))
-    print(trie.compute("COMPUTE x/2 WHERE x = QUERY ageqRfZ.level.person2.age"))
-    print(trie.compute("COMPUTE 2/(x+3*(y+z)) WHERE x = QUERY ageqRfZ.level.person2.age AND y = QUERY ageqRfZ.level.person2.height AND z = QUERY ageqRfZ.level.person2.age"))
-    print(trie.compute("COMPUTE cos(x)-tan(2*y+3) WHERE x = QUERY ageqRfZ.level.person2.age AND y = QUERY ageqRfZ.level.person2.height AND z = QUERY ageqRfZ.level.person2.age"))
-
-    # trie.add_to_trie(trie, "", data)
-    # print(trie.query('ageqRfZ.level.person2.age'))
-
-
-def print_key_value(v) -> str:
-
-    def handle_value(v):
-        if isinstance(v, dict):
-            return f'[ {print_key_value(v)} ]'
-
-        elif isinstance(v, list):
-            return f'[ {" | ".join(f"“{str(element)}”" for element in v)} ]'
-
-        elif isinstance(v, (int, float)):
-            return str(v)
-
-        elif v is None:
-            return 'null'
-
-        else:
-            return f'“{str(v)}”'
-
-    return f' | '.join([F'“{k}” -> {handle_value(v)}' for k, v in v])
-
-
-
-if __name__ == '__main__':
-    main()
