@@ -249,4 +249,4 @@ if __name__ == '__main__':
     main()
 
 
-# python3 run_client.py -s serverFile.txt -i outputFile.txt -k 2
+# python3 run_kv_client.py -s server_file.txt -i output_file.txt -k 2
