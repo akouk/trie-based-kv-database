@@ -38,16 +38,16 @@ Once the client starts, it connects to all servers, and for each line in data fi
 
 
 ## Input commands
-
-
+Once the indexing process has completed, the client now expects from the keyboard one of the following commands:
 
 | Command | Description |
 | --- | --- |
-| `GET <key>` | Retrieves the value of the specified key |
-| `DELETE <key>` | Deletes the key-value pair of the specified key |
-| `QUERY <keypath>` | Retrieves key-value pairs (or values) of the specified key path |
-| `COMPUTE <expression>` | Computes a mathematican expression |
-| `EXIT` | Closes connection with all servers |
+| `GET key` | Retrieves the value of the specified high-level key |
+| `DELETE key` | Deletes the specified high-level key |
+| `QUERY keypath` | Retrieves the value of a subkey in the value part of the high-level path |
+| `COMPUTE f(x) WHERE x = QUERY key.key2...` | Computes a simple computation with the values coming from a query to the KV Database |
+| `COMPUTE f(x,y,...) WHERE x = QUERY key1.key2 AND y = ...` | Computes an advanced computation with the values coming from a query to the KV Database |
+| `EXIT` | Closes connection to servers |
   
   
 ## Examples
