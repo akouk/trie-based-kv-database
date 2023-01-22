@@ -125,7 +125,13 @@ CMOPUTE x+2*(y+3) WHERE x = QUERY key1.key2.key3 AND y = QUERY key8.key9.key12.k
 - Make 
 
 
-
+Example of a server file
+```
+127.0.0.1 4000
+127.0.0.1 7000
+127.0.0.1 9000
+127.0.0.1 5000
+```
 
 
 
