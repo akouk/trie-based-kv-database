@@ -46,13 +46,21 @@ Once the indexing process has completed, the client now expects from the keyboar
 | `DELETE key` | Deletes the specified high-level key |
 | `QUERY keypath` | Retrieves the value of a subkey in the value part of the high-level path |
 | `COMPUTE f(x) WHERE x = QUERY key.key2...` | Computes a simple computation with the values coming from a query to the KV Database |
-| `COMPUTE f(x,y,...) WHERE x = QUERY key1.key2 AND y = ...` | Computes an advanced computation with the values coming from a query to the KV Database |
+| `COMPUTE f(x,y,z...) WHERE x = QUERY key1.key2 AND y = ... AND z = ...` | Computes an advanced computation with the values coming from a query to the KV Database |
 | `EXIT` | Closes connection to servers |
   
   
 ## Examples
-  
-Assume that the data stored on the servers are the following:
+
+- Example of a server file:
+```
+127.0.0.1 4000
+127.0.0.1 7000
+127.0.0.1 9000
+127.0.0.1 5000
+```
+
+- Example of data to be stored on the servers:
 ```python
 {'key1': {'key2' : {'key3': 4, 'key4': 8}}}
 {'key5': {'key6': 2, 'key7': 6}}
@@ -60,67 +68,65 @@ Assume that the data stored on the servers are the following:
 ```
   
   
-To retrieve the value of key1 enter the following command:
+- To retrieve the value of the `key5` enter the following command:
 ```python
 GET key5
 ```
-
-The high-level key `key5`
-This will print out the following:
+In this case, the data with the given high-level key (i.e. `key5`) is queried across all servers and if the results are found it is printed on the screen.
+This example queries all four servers of the example above and print out the following:
 ```python
 'key5' -> {'key6': 2, 'key7': 6}
 ```
- 
+Since it's implemented k-replication, the client continues to work unless k servers are down. If >= k servers are down the client outputs a warning indicating that k or more servers are down and therefore it cannot guarantee the correct output.
+
   
-  
-  
-To delete the key-value pair of key1 enter the following command:
+To delete the `key5` enter the following command:
 ```python
 DELETE key5
-  
 ```
+This command deletes the specified high-level key (i.e., `key5`), and is forwarded to all servers. If there is even one server down, delete cannot be
+reliably executed and thus prints a message indicating that delete cannot happen.
+
   
-  
-To retrieve value of key path key1.key2 enter the following command:
+To retrieve value of key path `key1.key2` enter the following command:
 ```python
 QUERY key1.key2
 ```
 
-This will print out the following:
+This command specifies that the key was not found if a query with a non-existent key wasasked. QUERY works in an identical way to GET as far as replication (i.e., number of available servers) is concerned. This exaple will print out the following:
 ```python
 'key1.key2' -> {'key3': 4, 'key4': 8}
 ```
-
   
-To compute  value of key path key1.key2.key3 enter the following command:
+To compute  a simple computatio with the value of key path `key5.key6` enter the following command:
 ```python
 COMPUTE x+2 WHERE x = QUERY key5.key6
 ```
-This will print out the following:
+This implements basic arithmetic functions of addition, subtraction, division, multiplication and power. This exaple will print out the following:
 ```python
 2
 ```
-  
-To compute  value of key path key1.key2.key3 enter the following command:
+
+
+To compute an advanced computation with the values coming from a query to the KV Store enter the following command:
 ```python
 CMOPUTE x+2*(y+3) WHERE x = QUERY key1.key2.key3 AND y = QUERY key8.key9.key12.key14
 ```
- This will print out the following:
+This case is an extending of the COMPUTE operation to allow for more advanced computations. More variables are handling as well as precedence of the operators and parentheses. This exaple will print out the following:
 ```python
 32
 ```
-  
+Trigonometric (sin, cos, tan) and logarithmic (base 10) functions are also recognized
+
+  you will be able to handle more variables as well as precedence of the operators and
+parentheses. You should also recognize trigonometric (sin, cos, tan) and logarithmic (base 10).
+
+
 ## Notes
 - Make 
 
 
-Example of a server file
-```
-127.0.0.1 4000
-127.0.0.1 7000
-127.0.0.1 9000
-127.0.0.1 5000
-```
+
 
 
 
