@@ -24,7 +24,7 @@ python3 run_kv_server.py <ip_address> -p <port> -a
 
 Each server starts at the specified IP adress and port (which should be one from the server file that the client is accepting as input) and is waiting for queries. Once the query is received, the server parses the query. If the query is incorrent (e.g. missing) the server returns ERROR to the client together with a message describing the error. If the query is correct, the server looks up its internal data structures and attempts to find the data corresponding to the quety. If the data is found, it is returned. If the data is not found, then NOTFOUND is returned.
 
-## Running the client
+### Running the client
 To run the client, use the following command:
 ```python
 python3 run_kv_client.py -s <servers_file_path> -i <server_data> -k <replicator_factor>
