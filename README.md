@@ -80,7 +80,7 @@ This example queries all four servers of the example above and print out the fol
 Since it's implemented k-replication, the client continues to work unless k servers are down. If >= k servers are down the client outputs a warning indicating that k or more servers are down and therefore it cannot guarantee the correct output.
 
   
-To delete the `key5` enter the following command:
+- To delete the `key5` enter the following command:
 ```python
 DELETE key5
 ```
@@ -88,7 +88,7 @@ This command deletes the specified high-level key (i.e., `key5`), and is forward
 reliably executed and thus prints a message indicating that delete cannot happen.
 
   
-To retrieve value of key path `key1.key2` enter the following command:
+- To retrieve value of key path `key1.key2` enter the following command:
 ```python
 QUERY key1.key2
 ```
@@ -98,7 +98,7 @@ This command specifies that the key was not found if a query with a non-existent
 'key1.key2' -> {'key3': 4, 'key4': 8}
 ```
   
-To compute  a simple computatio with the value of key path `key5.key6` enter the following command:
+- To compute  a simple computatio with the value of key path `key5.key6` enter the following command:
 ```python
 COMPUTE x+2 WHERE x = QUERY key5.key6
 ```
@@ -108,7 +108,7 @@ This implements basic arithmetic functions of addition, subtraction, division, m
 ```
 
 
-To compute an advanced computation with the values coming from a query to the KV Store enter the following command:
+- To compute an advanced computation with the values coming from a query to the KV Store enter the following command:
 ```python
 CMOPUTE x+2*(y+3) WHERE x = QUERY key1.key2.key3 AND y = QUERY key8.key9.key12.key14
 ```
@@ -117,39 +117,5 @@ This case is an extending of the COMPUTE operation to allow for more advanced co
 32
 ```
 Trigonometric (sin, cos, tan) and logarithmic (base 10) functions are also recognized
-
-  you will be able to handle more variables as well as precedence of the operators and
-parentheses. You should also recognize trigonometric (sin, cos, tan) and logarithmic (base 10).
-
-
-## Notes
-- Make 
-
-
-
-
-
-
-
-
-## Key-Value Client
-To start the Key-Value client, use the following command:
-python3 kvClient.py -s serverFile.txt -i dataToIndex.txt -k 2
-
-Where:
-- "serverFile.txt" is a space separated list of servers IPs and their respective ports that will be listening for queries and indexing commands
-- "dataToIndex.txt" is a file containg data
-- "k" is the replication factor, i.e. how many different servers will have the same replicated data
-
-Once the Ley-Value client starts, it connects to all the servers and sends requests to store tha data from "dataToIndex.txt". If everything is successful, the servers will respond with "OK", or "ERROR" if there was a problem.
-
-After the indexing process is complete, the Key-Value client can accept the following commands:
-- "GET key": queries all servers for the data with the given key, and prints the results if found
-- "DELETE key": deletes the specified key. This command needs to be forwarded to all the servers. If any server is down, delete cannot be reliably executed.
-- "QUERY keypath": similar to "GET", but returns the value of a subkey within a value
-- "COMPUTE : 
--
-The Key-Value clients will continue to work unless k servers are down. If k or more servers are down, the client will output a warning indicating it cannot guarantee the correct output.
-
 
 
